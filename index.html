@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>討債小幫手</title>
+
+
+  <link href="css/simple-sidebar.css" rel="stylesheet">
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <!--<link rel="stylesheet" href="http://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/master/build/css/bootstrap-datetimepicker.min.css">-->
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+  <script type="text/javascript" src="js/MainCtrl.js"></script>
+</head>
+<style>
+  font[size]{
+    display:none;
+  }
+</style>
+
+<body>
+
+<div id="wrapper" ng-app='' ng-controller='MainCtrl'>
+
+        <!-- Sidebar -->
+  <div id="sidebar-wrapper">
+    <ul class="sidebar-nav">
+      <li class="sidebar-brand">
+          <h3><a href onclick="(function(){document.getElementById('menu-toggle').click();}())" ng-click="showHome()">討債小幫手 beta</a></h3>
+      </li>
+      <hr/>
+      <li>
+        <b>朋友清單</b>
+      </li>
+      <li ng-repeat="person in people" ng-cloak>
+          <h3><a href onclick="(function(){document.getElementById('menu-toggle').click();}())" ng-click="showRecords($index)">{{person.name}}</a></h>
+      </li>
+      <li>
+        <b>新增朋友</b>
+      </li>
+      <li  style="color:white;text-indent:0px;padding-left:20px;padding-right:20px;">
+          
+          <form name="addPersonForm" novalidate>
+             
+              <input type="text" class="form-control"  placeholder="Type new name..."ng-model='inputName' required>  
+                
+              <button type="submit" class="btn btn-primary"ng-click="addPersonForm.$valid&&addPerson(inputName)" >新增</button>
+                
+            
+          </form>
+        
+      </li>
+      <hr/>
+      <li>
+        <b>設定</b>
+      </li>
+      <li><button ng-click="clearData()" class="btn btn-default" >重置</button></li>
+    </ul>
+    
+  </div>
+  <!-- /#sidebar-wrapper -->
+  <div id="page-content-wrapper">
+    <div class="container-fluid">
+      <a href="#menu-toggle" class="" id="menu-toggle"><h4><span class="glyphicon glyphicon-align-justify"></span></h4></a>
+      
+
+      <div class="row" ng-hide="recordsShow">
+        <div class="col-xs-12">
+          <h1 cloak>{{greet}}</h1>
+          <hr/>
+          <h4>這個應用程式幫助你紀錄與朋友互相賒帳的複雜金錢流動，簡單的使用方法，並能隨時結算誰欠誰多少。不需登入，資料即可存在你的裝置中。</h4>
+          <h4>歡迎使用<b>「討債小幫手」</b>！我是<a href="https://www.facebook.com/chiunhauyou">YCH</a>，歡迎留言、反應意見。</h4>
+
+        </div>
+      </div>
+      
+      <div ng-show="recordsShow" ng-cloak>
+        <div class="row">
+          <div class="col-xs-12" style="text-align:center">
+            <h2>@ {{people[recentPerson]['name']}}</h2>
+            <hr/>
+            
+          </div>
+        </div>
+     
+        
+
+        
+          
+          <div class="row">
+            <div class="col-md-4 col-md-offset-2">
+              <h4 style="margin-top:50px;">新增紀錄</h4>
+              <form name="newRecord" novalidate>
+              <div class="form-group">
+                <label class="control-label" for="focusedInput">誰借誰？</label>
+                <ul class="nav nav-pills">
+                  <li class="active" ng-class="{true: 'active', false: ''}[youGaveIsActive]"><a href ng-click="whoGaveWho()">你借給 {{people[recentPerson]['name']}}</a></li>
+                  <li ng-class="{false: 'active', true: ''}[youGaveIsActive]"><a href ng-click="whoGaveWho()">{{people[recentPerson]['name']}} 借給你</a></li>
+                </ul>
+              </div>
+            
+              <div class="form-group">
+                <label class="control-label" for="focusedInput">借多少？</label>
+                <div class='input-group'>
+                  <input type="number" ng-model='inputMoney' required class="form-control" placeholder="{{youGaveIsActive ? '你借給 '+people[recentPerson].name+'...' : people[recentPerson].name+' 借給你...'}}"/>
+                </div>
+              </div>
+            
+              <div class="form-group">
+                <label class="control-label" for="focusedInput">什麼時候？</label>
+                <div class='input-group'>
+                  <input type='text' ng-model='inputDate' class="form-control"  placeholder="填個日期吧..."/>
+                  
+                       
+                </div>
+              </div>    
+            
+              <div class="form-group">
+                <label class="control-label" for="focusedInput">備註</label>
+                <div class='input-group'>
+                  <input type="text" ng-model='inputDescription' class="form-control" placeholder="寫點記錄..."/>
+                </div>
+              </div>
+            
+          <button  class="btn btn-default" type="submit"ng-click="newRecord.$valid&&saveRecord(recentPerson)">儲存</button>
+        </form>
+        </div>
+        
+
+        
+        <div class="col-md-4">         
+        <h4 style="margin-top:50px;">檢視紀錄</h4>
+          <ul  class="list-group"> 
+            <li ng-repeat-start="record in records track by $id(record)" class="list-group-item">
+              <span ng-show="youGive[$index]">你借給 {{people[recentPerson]['name']}} </span>
+              <span ng-hide="youGive[$index]">{{people[recentPerson]['name']}} 借給你 </span>
+              {{record.money|currency}}
+              <a style="float:right" href class="btn btn-link" ng-hide="showDetailArray[$index]" ng-click="showDetail($index)"><span class="glyphicon glyphicon-chevron-down"></span></a>
+
+              <a style="float:right" href class="btn btn-link" ng-show="showDetailArray[$index]"ng-click="hideDetail($index)"><span class="glyphicon glyphicon-chevron-up"></span></a>
+            </li>
+            <li ng-repeat-end class="list-group-item" ng-show="showDetailArray[$index]" style="background-color:hsla(0, 0%, 90%, 1)">
+              日期： {{record.date}}<br/>
+              備註： {{record.description}}<br/>
+              刪除此筆記錄：<a href ng-click="deleteRecord($index)"><span class="glyphicon glyphicon-trash"></span></a>
+            </li>
+            <li class="list-group-item active">
+              總計： 
+              <span ng-show="youOwe">你欠 {{people[recentPerson]['name']}} </span>
+              <span ng-hide="youOwe">{{people[recentPerson]['name']}} 欠你 </span>
+              {{total()|currency}} !
+            </li>
+          </ul> 
+        </div>
+
+      </div> 
+      <hr style="margin-top:50px;"/>
+      <div class="row">
+        <div class="col-xs-12" style="text-align:right">
+          <h4><a href ng-click="deletePerson()">刪除<span class="glyphicon glyphicon-trash"></span></a></h4>
+        </div>
+      </div>        
+    </div>
+  </div>
+</div>
+
+        
+<script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+    <!--<script src="js/moment.js"></script>
+    <script src="js/bootstrap-datetimepicker.js"></script>-->
+    <!-- Menu Toggle Script -->
+    <script>
+
+    $("#menu-toggle").click(function(e) {
+        e.preventDefault();
+        $("#wrapper").toggleClass("toggled");
+    });
+   
+    </script>
+
+</body>
+</html>
